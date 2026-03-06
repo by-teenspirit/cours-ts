@@ -1,0 +1,2 @@
+ALTER TABLE "screenings" ALTER COLUMN "id" SET DEFAULT gen_random_uuid();--> statement-breakpoint
+ALTER TABLE "screenings" ADD CONSTRAINT "screenings_movie_id_room_id_start_time_unique" UNIQUE("movie_id","room_id","start_time");
