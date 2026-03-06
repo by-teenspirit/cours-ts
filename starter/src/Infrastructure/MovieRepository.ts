@@ -1,22 +1,40 @@
-// Implémenter ici le repository `MovieRepository`.
-import { pool } from "./DB.js";
-import { Movie } from "../Domain/Movie.js";
+import { db } from "./drizzle.js";
+import { movies } from "./schema.js";
+import type { Movie } from "../Domain/Movie.js";
 
 export const MovieRepository = {
   async list(): Promise<Movie[]> {
-    const result = await pool.query(`
-      select
-        id,
-        title,
-        description,
-        duration_minutes as "durationMinutes",
-        rating,
-        release_date::text as "releaseDate"
-      from movies
-      order by id asc
-    `);
+    return db.select().from(movies).orderBy(movies.id.asc);
+  },
 
-    return result.rows;
+  async findById(id: number): Promise<Movie | null> {
+    return db.select().from(movies).where(movies.id.eq(id)).get();
+  },
+
+  async create(movie: Partial<Movie>): Promise<Movie> {
+    const [newMovie] = await db
+      .insert(movies)
+      .values({
+        title: movie.title!,
+        description: movie.description,
+        durationMinutes: movie.durationMinutes!,
+        rating: movie.rating,
+        releaseDate: movie.releaseDate,
+      })
+      .returning("*");
+    return newMovie;
+  },
+
+  async update(id: number, data: Partial<Movie>): Promise<Movie | null> {
+    const [updated] = await db
+      .update(movies)
+      .set(data)
+      .where(movies.id.eq(id))
+      .returning("*");
+    return updated || null;
+  },
+
+  async delete(id: number): Promise<void> {
+    await db.delete(movies).where(movies.id.eq(id));
   },
 };
-
